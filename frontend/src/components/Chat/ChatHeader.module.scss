@@ -1,0 +1,97 @@
+.chatHeader {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+    background-color: #1c1c1e;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .profile {
+    padding: 20px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .username {
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+  }
+
+  .actions {
+    display: flex;
+    align-items: center;
+  }
+  
+  .onlineCount {
+    font-size: 14px;
+    margin-left: 5px;
+    font-weight: bold;
+    color: white;
+  }
+  
+  .userMenu {
+    position: absolute;
+    background: #2c2c2e;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    width: 150px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 100;
+    scrollbar-width: none; // 
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+  
+  .userList {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .sectionTitle {
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    margin-bottom: 5px;
+    padding: 5px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .userItem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  
+  .userItem:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  .userAvatar {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .userName {
+    font-size: 14px;
+    color: white;
+  }
+  
+  .noUsers {
+    font-size: 12px;
+    color: #bbb;
+    padding: 5px 10px;
+  }
+
+.sticky {
+  position: sticky;
+  bottom: 0;
+}

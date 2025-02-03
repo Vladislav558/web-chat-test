@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Тестовый клиент чата (STOMP/SockJS)</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    #messages {
+      list-style: none;
+      padding: 0;
+      border: 1px solid #ccc;
+      height: 300px;
+      overflow-y: scroll;
+      margin-bottom: 10px;
+    }
+    #messages li {
+      padding: 5px 10px;
+      border-bottom: 1px solid #eee;
+    }
+  </style>
+</head>
+<body>
+  <h1>Тестовый клиент чата</h1>
+  <ul id="messages"></ul>
+  <input type="text" id="messageInput" placeholder="Введите сообщение" style="width: 80%;" />
+  <button onclick="sendMessage()">Отправить</button>
+
+  <script>
+    let stompClient = null;
+
+    function getCookie(name) {
+      const value = "; " + document.cookie;
+      const parts = value.split("; " + name + "=");
+      if (parts.length === 2) return parts.pop().split(";").shift();
+      return null;
+    }
+
+    function connect() {
+      var socket = new SockJS('http://localhost:5000/ws');
+      stompClient = Stomp.over(socket);
+
+      stompClient.connect({}, function(frame) {
+        console.log('Подключено: ' + frame);
+        stompClient.subscribe('/topic/public', function(messageOutput) {
+          showMessage(JSON.parse(messageOutput.body));
+        });
+      }, function(error) {
+        console.error("Ошибка подключения: " + error);
+      });
+    }
+
+    function sendMessage() {
+      const messageContent = document.getElementById("messageInput").value;
+      if (messageContent && stompClient) {
+        stompClient.send("/app/chat.sendMessage", {}, JSON.stringify({
+          sender: "test123@bk.ru",
+          content: messageContent
+        }));
+        document.getElementById("messageInput").value = "";
+      }
+    }
+
+    function showMessage(message) {
+      const messagesList = document.getElementById("messages");
+      const li = document.createElement("li");
+      li.textContent = message.sender + ": " + message.content;
+      messagesList.appendChild(li);
+      messagesList.scrollTop = messagesList.scrollHeight;
+    }
+
+    function loadChatHistory() {
+      fetch('http://localhost:5000/api/chat/history', {
+        method: 'GET',
+        credentials: 'include'
+      })
+      .then(response => response.json())
+      .then(messages => {
+        messages.forEach(showMessage);
+        console.log("История загружена:", messages);
+      })
+      .catch(error => console.error("Ошибка загрузки истории:", error));
+    }
+
+    function loginAndMaybeConnect() {
+      fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: "test123@bk.ru",
+          password: "1234"
+        })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Ошибка сети: ' + response.statusText);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Логин успешный:', data);
+        const newAccessToken = getCookie("access_token");
+        const newRefreshToken = getCookie("refresh_token");
+        if (newAccessToken && newRefreshToken) {
+          console.log("Токены установлены. Загружаем историю...");
+          loadChatHistory();
+          connect();
+        } else {
+          console.log("Токены не установлены, выполняем подключение к чату");
+          loadChatHistory();
+          connect();
+        }
+      })
+      .catch(error => {
+        console.error('Ошибка при логине:', error);
+        connect();
+      });
+    }
+
+    window.onload = function() {
+      const accessToken = getCookie("access_token");
+      const refreshToken = getCookie("refresh_token");
+
+      if (!accessToken && !refreshToken) {
+        console.log("Токены отсутствуют, выполняем логин...");
+        loginAndMaybeConnect();
+      } else {
+        console.log("Токены найдены, загружаем историю и подключаемся к чату...");
+        loadChatHistory();
+        connect();
+      }
+    };
+  </script>
+</body>
+</html>
